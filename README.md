@@ -1,7 +1,3 @@
---- pak-map-app/README.md (原始)
-
-
-+++ pak-map-app/README.md (修改后)
 # PAK MAP - Pakistan National Navigation App
 
 A privacy-focused, offline-capable map application designed specifically for Pakistan with advanced features similar to Google Maps and Apple Maps.
