@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>PAK MAP</title>
@@ -12,319 +12,292 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --glass-bg: rgba(28, 28, 30, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-blur: blur(20px);
-            --accent-color: #007AFF; /* Apple Blue */
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.7);
-            --danger-color: #FF3B30;
-            --safe-area-top: env(safe-area-inset-top, 20px);
-            --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --shadow-lg: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --primary-color: #007AFF;
+            --text-dark: #1d1d1f;
+            --text-light: #86868b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #000;
-            color: var(--text-primary);
             overflow: hidden;
+            background: #000;
+            color: var(--text-dark);
             height: 100vh;
             width: 100vw;
         }
 
-        /* Map Container */
         #map {
+            width: 100%;
+            height: 100%;
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 0;
+            left: 0;
             z-index: 1;
-            background: #0f172a;
         }
 
-        /* UI Overlay Layer */
         .ui-layer {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 1000;
-            pointer-events: none; /* Let clicks pass through to map */
+            pointer-events: none;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
-        /* Top Search Bar (Apple Style) */
-        .top-bar {
-            padding: calc(var(--safe-area-top) + 10px) 16px 10px;
+        /* Search Bar */
+        .search-container {
             pointer-events: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            padding: 16px;
+            padding-top: max(16px, env(safe-area-inset-top));
+            background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 100%);
         }
 
-        .search-container {
+        .search-bar-wrapper {
             background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: 12px;
-            padding: 10px 16px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--glass-border);
             display: flex;
             align-items: center;
-            gap: 10px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            padding: 8px 12px;
             transition: all 0.3s ease;
         }
 
-        .search-container:focus-within {
-            background: rgba(40, 40, 40, 0.85);
-            border-color: var(--accent-color);
+        .search-bar-wrapper:focus-within {
+            box-shadow: 0 0 0 2px var(--primary-color);
+            background: rgba(255, 255, 255, 0.95);
         }
 
-        .search-input {
-            background: transparent;
+        .search-icon {
+            color: var(--text-light);
+            margin-right: 8px;
+            font-size: 20px;
+        }
+
+        #search-input {
             border: none;
-            color: white;
-            font-size: 17px;
+            background: transparent;
             flex: 1;
+            font-size: 17px;
             outline: none;
+            color: var(--text-dark);
             font-weight: 500;
         }
 
-        .search-input::placeholder { color: var(--text-secondary); }
-
-        /* Bottom Sheet / Controls */
-        .bottom-controls {
-            padding: 0 16px calc(var(--safe-area-bottom) + 20px);
-            pointer-events: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: center;
-        }
-
-        /* Floating Action Buttons Group */
-        .fab-group {
-            display: flex;
-            gap: 12px;
-            width: 100%;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        .btn-circle {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            transition: transform 0.2s, background 0.2s;
-        }
-
-        .btn-circle:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
-        .btn-circle.active { background: var(--accent-color); border-color: var(--accent-color); }
-
-        /* Main Navigation Bar (Bottom) */
-        .nav-bar {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border-top: 1px solid var(--glass-border);
-            border-radius: 20px 20px 0 0;
-            padding: 10px 20px calc(10px + var(--safe-area-bottom));
-            display: flex;
-            justify-content: space-around;
-            margin: 0 -16px; /* Full width */
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            color: var(--text-secondary);
-            font-size: 10px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .nav-item.active { color: var(--accent-color); }
-        .nav-item .material-icons-round { font-size: 24px; }
-
-        /* Search Results Panel */
-        .results-panel {
+        /* Results */
+        #search-results {
             position: absolute;
             top: 70px;
             left: 16px;
             right: 16px;
-            background: rgba(20, 20, 20, 0.95);
-            backdrop-filter: blur(30px);
-            border-radius: 16px;
-            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
             max-height: 60vh;
             overflow-y: auto;
             display: none;
             pointer-events: auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             z-index: 1001;
         }
 
-        .results-panel.show { display: block; animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        #search-results.show { display: block; animation: slideDown 0.3s ease; }
 
         .result-item {
-            padding: 14px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
             cursor: pointer;
             display: flex;
             align-items: center;
+        }
+
+        .result-item:last-child { border-bottom: none; }
+        .result-item:active { background: rgba(0,0,0,0.05); }
+
+        .result-icon {
+            background: #e5e5ea;
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: var(--text-dark);
+        }
+
+        .result-info h4 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+        .result-info p { font-size: 13px; color: var(--text-light); }
+
+        /* Categories */
+        .categories-container {
+            pointer-events: auto;
+            padding: 0 16px 16px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .categories-container::-webkit-scrollbar { display: none; }
+
+        .cat-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            color: var(--text-dark);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cat-btn:active { transform: scale(0.95); }
+        .cat-btn.active { background: var(--text-dark); color: white; }
+
+        /* Bottom Controls */
+        .bottom-controls {
+            pointer-events: auto;
+            padding: 20px;
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
             gap: 12px;
         }
 
-        .result-item:active { background: rgba(255,255,255,0.05); }
-        .result-icon { color: var(--accent-color); }
-        .result-info h4 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
-        .result-info p { font-size: 12px; color: var(--text-secondary); }
-
-        /* Compass */
-        .compass {
-            position: absolute;
-            top: calc(var(--safe-area-top) + 130px);
-            right: 16px;
-            width: 40px;
-            height: 40px;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
+        .map-btn {
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-lg);
             display: flex;
             align-items: center;
             justify-content: center;
-            pointer-events: auto;
-            border: 1px solid var(--glass-border);
-            z-index: 999;
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        /* Loading Overlay */
-        #loading {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s;
+        .map-btn:active { transform: scale(0.9); background: #fff; }
+        .map-btn.active { background: var(--text-dark); color: white; }
+
+        /* Loader */
+        #loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            display: none;
+            z-index: 2000;
+            text-align: center;
+            pointer-events: none;
         }
         .spinner {
-            width: 40px; height: 40px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top-color: var(--accent-color);
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 10px;
         }
-        .logo-text { margin-top: 20px; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
 
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Custom Leaflet Controls Hide */
-        .leaflet-control-zoom { display: none !important; }
-        .leaflet-control-attribution { font-size: 9px; background: rgba(0,0,0,0.5) !important; color: #aaa !important; }
+        /* Leaflet Fixes */
+        .leaflet-control-zoom { border: none !important; box-shadow: var(--shadow-lg) !important; }
+        .leaflet-control-zoom a { background: var(--glass-bg) !important; color: var(--text-dark) !important; backdrop-filter: blur(10px) !important; }
+        .leaflet-popup-content-wrapper { border-radius: 12px !important; backdrop-filter: blur(10px) !important; background: rgba(255,255,255,0.9) !important; }
     </style>
 </head>
 <body>
 
-    <!-- Loading Screen -->
-    <div id="loading">
-        <div class="spinner"></div>
-        <div class="logo-text">PAK MAP</div>
-        <div style="color: #666; font-size: 12px; margin-top: 8px;">Loading Satellite Data...</div>
-    </div>
-
-    <!-- Map -->
     <div id="map"></div>
 
-    <!-- UI Layer -->
     <div class="ui-layer">
-        
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <div class="search-container">
-                <span class="material-icons-round" style="color: var(--text-secondary)">search</span>
-                <input type="text" id="search-input" class="search-input" placeholder="Search cities, villages, places...">
-                <span class="material-icons-round" id="voice-btn" style="color: var(--accent-color); cursor: pointer">mic</span>
+        <!-- Top Search -->
+        <div class="search-container">
+            <div class="search-bar-wrapper">
+                <span class="material-icons-round search-icon">search</span>
+                <input type="text" id="search-input" placeholder="Search Pakistan (Villages, Shops, Cities)...">
+                <span class="material-icons-round" style="cursor:pointer; color:var(--primary-color)" onclick="toggleVoiceSearch()">mic</span>
             </div>
-            
-            <!-- Quick Actions Chips -->
-            <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
-                <button class="btn-chip" onclick="filterCategory('food')">🍽️ Food</button>
-                <button class="btn-chip" onclick="filterCategory('fuel')">⛽ Fuel</button>
-                <button class="btn-chip" onclick="filterCategory('hospital')">🏥 Hospital</button>
-                <button class="btn-chip" onclick="filterCategory('police')">👮 Police</button>
-            </div>
+            <div id="search-results"></div>
         </div>
 
-        <!-- Compass -->
-        <div class="compass" id="compass" onclick="resetRotation()">
-            <span class="material-icons-round" style="font-size: 20px; color: white;">navigation</span>
+        <!-- Categories -->
+        <div class="categories-container">
+            <button class="cat-btn" onclick="searchCategory('restaurant')"><span class="material-icons-round">restaurant</span> Food</button>
+            <button class="cat-btn" onclick="searchCategory('fuel')"><span class="material-icons-round">local_gas_station</span> Fuel</button>
+            <button class="cat-btn" onclick="searchCategory('hospital')"><span class="material-icons-round">local_hospital</span> Hospital</button>
+            <button class="cat-btn" onclick="searchCategory('school')"><span class="material-icons-round">school</span> School</button>
+            <button class="cat-btn" onclick="searchCategory('marketplace')"><span class="material-icons-round">shopping_bag</span> Market</button>
         </div>
-
-        <!-- Search Results -->
-        <div class="results-panel" id="results-panel"></div>
 
         <!-- Bottom Controls -->
         <div class="bottom-controls">
-            <div class="fab-group">
-                <button class="btn-circle" onclick="toggleLayer('satellite')" id="layer-btn" title="Toggle Map/Satellite">
+            <div class="control-group">
+                <div class="map-btn" onclick="toggleLayers()" title="Toggle Map/Satellite">
                     <span class="material-icons-round">layers</span>
-                </button>
-                
-                <button class="btn-circle" onclick="locateUser()" style="background: var(--accent-color); border: none;">
+                </div>
+                <div class="map-btn" onclick="locateUser()" title="My Location">
                     <span class="material-icons-round">my_location</span>
-                </button>
-                
-                <button class="btn-circle" onclick="toggle3D()" id="3d-btn" title="3D Tilt">
-                    <span class="material-icons-round">view_in_ar</span>
-                </button>
+                </div>
             </div>
-        </div>
-
-        <!-- Bottom Navigation -->
-        <div class="nav-bar">
-            <div class="nav-item active" onclick="setMode('explore')">
-                <span class="material-icons-round">explore</span>
-                <span>Explore</span>
-            </div>
-            <div class="nav-item" onclick="setMode('directions')">
-                <span class="material-icons-round">directions</span>
-                <span>Go</span>
-            </div>
-            <div class="nav-item" onclick="setMode('saved')">
-                <span class="material-icons-round">bookmark</span>
-                <span>Saved</span>
-            </div>
-            <div class="nav-item" onclick="toggleLanguage()">
-                <span class="material-icons-round">language</span>
-                <span id="lang-label">EN</span>
+            
+            <div class="control-group">
+                <div class="map-btn" id="compass-btn" onclick="resetRotation()" title="Reset North">
+                    <span class="material-icons-round" style="transform: rotate(0deg); transition: transform 0.3s;">near_me</span>
+                </div>
+                <div class="map-btn" onclick="toggleLanguage()" title="Language">
+                    <span class="material-icons-round">language</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Leaflet JS -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="loader-text">Searching...</div>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js"></script>
 </body>
