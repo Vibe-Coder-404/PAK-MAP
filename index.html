@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>PAK MAP</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>PAK MAP - Professional Navigation</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -45,6 +45,7 @@
             z-index: 1;
         }
 
+        /* UI Overlay */
         .ui-layer {
             position: absolute;
             top: 0;
@@ -81,14 +82,10 @@
 
         .search-bar-wrapper:focus-within {
             box-shadow: 0 0 0 2px var(--primary-color);
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
         }
 
-        .search-icon {
-            color: var(--text-light);
-            margin-right: 8px;
-            font-size: 20px;
-        }
+        .search-icon { color: var(--text-light); margin-right: 8px; font-size: 20px; }
 
         #search-input {
             border: none;
@@ -100,7 +97,7 @@
             font-weight: 500;
         }
 
-        /* Results */
+        /* Results Dropdown */
         #search-results {
             position: absolute;
             top: 70px;
@@ -127,7 +124,6 @@
             align-items: center;
         }
 
-        .result-item:last-child { border-bottom: none; }
         .result-item:active { background: rgba(0,0,0,0.05); }
 
         .result-icon {
@@ -168,14 +164,12 @@
             color: var(--text-dark);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             cursor: pointer;
-            transition: transform 0.2s;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
         .cat-btn:active { transform: scale(0.95); }
-        .cat-btn.active { background: var(--text-dark); color: white; }
 
         /* Bottom Controls */
         .bottom-controls {
@@ -226,7 +220,6 @@
             display: none;
             z-index: 2000;
             text-align: center;
-            pointer-events: none;
         }
         .spinner {
             width: 24px;
@@ -241,10 +234,10 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Leaflet Fixes */
-        .leaflet-control-zoom { border: none !important; box-shadow: var(--shadow-lg) !important; }
-        .leaflet-control-zoom a { background: var(--glass-bg) !important; color: var(--text-dark) !important; backdrop-filter: blur(10px) !important; }
-        .leaflet-popup-content-wrapper { border-radius: 12px !important; backdrop-filter: blur(10px) !important; background: rgba(255,255,255,0.9) !important; }
+        /* Leaflet Overrides */
+        .leaflet-control-zoom { border: none !important; box-shadow: var(--shadow-lg) !important; border-radius: 8px !important; overflow: hidden; }
+        .leaflet-control-zoom a { background: var(--glass-bg) !important; color: var(--text-dark) !important; backdrop-filter: blur(10px) !important; border: none !important; }
+        .leaflet-popup-content-wrapper { border-radius: 12px !important; backdrop-filter: blur(10px) !important; background: rgba(255,255,255,0.95) !important; }
     </style>
 </head>
 <body>
@@ -256,37 +249,37 @@
         <div class="search-container">
             <div class="search-bar-wrapper">
                 <span class="material-icons-round search-icon">search</span>
-                <input type="text" id="search-input" placeholder="Search Pakistan (Villages, Shops, Cities)...">
-                <span class="material-icons-round" style="cursor:pointer; color:var(--primary-color)" onclick="toggleVoiceSearch()">mic</span>
+                <input type="text" id="search-input" placeholder="Search villages, shops, cities...">
+                <span class="material-icons-round" style="cursor:pointer; color:var(--primary-color)" onclick="startVoiceSearch()">mic</span>
             </div>
             <div id="search-results"></div>
         </div>
 
         <!-- Categories -->
         <div class="categories-container">
-            <button class="cat-btn" onclick="searchCategory('restaurant')"><span class="material-icons-round">restaurant</span> Food</button>
-            <button class="cat-btn" onclick="searchCategory('fuel')"><span class="material-icons-round">local_gas_station</span> Fuel</button>
-            <button class="cat-btn" onclick="searchCategory('hospital')"><span class="material-icons-round">local_hospital</span> Hospital</button>
-            <button class="cat-btn" onclick="searchCategory('school')"><span class="material-icons-round">school</span> School</button>
-            <button class="cat-btn" onclick="searchCategory('marketplace')"><span class="material-icons-round">shopping_bag</span> Market</button>
+            <button class="cat-btn" onclick="findNearby('restaurant')"><span class="material-icons-round">restaurant</span> Food</button>
+            <button class="cat-btn" onclick="findNearby('fuel')"><span class="material-icons-round">local_gas_station</span> Fuel</button>
+            <button class="cat-btn" onclick="findNearby('hospital')"><span class="material-icons-round">local_hospital</span> Hospital</button>
+            <button class="cat-btn" onclick="findNearby('school')"><span class="material-icons-round">school</span> School</button>
+            <button class="cat-btn" onclick="findNearby('marketplace')"><span class="material-icons-round">shopping_bag</span> Market</button>
         </div>
 
         <!-- Bottom Controls -->
         <div class="bottom-controls">
             <div class="control-group">
-                <div class="map-btn" onclick="toggleLayers()" title="Toggle Map/Satellite">
+                <div class="map-btn" onclick="toggleMapLayer()" title="Switch Map/Satellite">
                     <span class="material-icons-round">layers</span>
                 </div>
-                <div class="map-btn" onclick="locateUser()" title="My Location">
+                <div class="map-btn" onclick="locateMe()" title="My Location">
                     <span class="material-icons-round">my_location</span>
                 </div>
             </div>
             
             <div class="control-group">
-                <div class="map-btn" id="compass-btn" onclick="resetRotation()" title="Reset North">
-                    <span class="material-icons-round" style="transform: rotate(0deg); transition: transform 0.3s;">near_me</span>
+                <div class="map-btn" onclick="resetNorth()" title="North Up">
+                    <span class="material-icons-round">near_me</span>
                 </div>
-                <div class="map-btn" onclick="toggleLanguage()" title="Language">
+                <div class="map-btn" onclick="toggleLang()" title="Language">
                     <span class="material-icons-round">language</span>
                 </div>
             </div>
@@ -298,7 +291,268 @@
         <div id="loader-text">Searching...</div>
     </div>
 
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js"></script>
+    
+    <script>
+        // --- CONFIGURATION ---
+        let map;
+        let currentMode = 'hybrid'; // 'standard' or 'hybrid'
+        let userMarker = null;
+        let searchTimer = null;
+        
+        // Pakistan Bounds
+        const PAK_BOUNDS = [[23.5, 60.5], [37.5, 78.0]];
+
+        // --- INITIALIZATION ---
+        function init() {
+            // Create Map
+            map = L.map('map', {
+                center: [30.3753, 69.3451],
+                zoom: 6,
+                minZoom: 5,
+                maxZoom: 19,
+                zoomControl: false,
+                attributionControl: false
+            });
+
+            // Define Layers
+            const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19,
+                attribution: 'Esri'
+            });
+
+            const osmLabels = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                opacity: 0.9,
+                attribution: 'OSM'
+            });
+
+            const standard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: 'OSM'
+            });
+
+            // Store references
+            map.layers = { satellite, osmLabels, standard };
+
+            // Set Default (Hybrid)
+            satellite.addTo(map);
+            osmLabels.addTo(map);
+
+            // Restrict to Pakistan
+            map.setMaxBounds(PAK_BOUNDS);
+            map.on('drag', () => {
+                if (!map.getBounds().intersects(PAK_BOUNDS)) {
+                    map.panInsideBounds(PAK_BOUNDS, { animate: false });
+                }
+            });
+
+            // Add Zoom Control manually
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            // Event Listeners
+            document.getElementById('search-input').addEventListener('input', handleSearch);
+            
+            console.log("PAK MAP Loaded Successfully");
+        }
+
+        // --- SEARCH LOGIC (NOMINATIM API) ---
+        function handleSearch(e) {
+            clearTimeout(searchTimer);
+            const query = e.target.value.trim();
+            const resultsDiv = document.getElementById('search-results');
+
+            if (query.length < 3) {
+                resultsDiv.classList.remove('show');
+                return;
+            }
+
+            searchTimer = setTimeout(() => {
+                fetchSearchResults(query);
+            }, 600);
+        }
+
+        async function fetchSearchResults(query) {
+            const loader = document.getElementById('loader');
+            loader.style.display = 'block';
+            
+            try {
+                // Fetch from OSM Nominatim restricted to Pakistan
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=pk&limit=8&addressdetails=1`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                displayResults(data);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('search-results').innerHTML = '<div class="result-item">Connection error</div>';
+                document.getElementById('search-results').classList.add('show');
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function displayResults(results) {
+            const div = document.getElementById('search-results');
+            div.innerHTML = '';
+            
+            if (results.length === 0) {
+                div.innerHTML = '<div class="result-item">No results found</div>';
+                div.classList.add('show');
+                return;
+            }
+
+            results.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'result-item';
+                
+                // Icon logic
+                let icon = 'location_on';
+                if (item.type === 'house') icon = 'home';
+                if (item.amenity === 'restaurant') icon = 'restaurant';
+                if (item.amenity === 'fuel') icon = 'local_gas_station';
+                if (item.amenity === 'hospital') icon = 'local_hospital';
+
+                el.innerHTML = `
+                    <div class="result-icon"><span class="material-icons-round">${icon}</span></div>
+                    <div class="result-info">
+                        <h4>${item.name}</h4>
+                        <p>${item.display_name.split(',').slice(0, 3).join(', ')}</p>
+                    </div>
+                `;
+                
+                el.onclick = () => selectLocation(item);
+                div.appendChild(el);
+            });
+            
+            div.classList.add('show');
+        }
+
+        function selectLocation(item) {
+            const lat = parseFloat(item.lat);
+            const lon = parseFloat(item.lon);
+            
+            map.flyTo([lat, lon], 16, { duration: 1.5 });
+            
+            // Remove old marker
+            if (window.selectedMarker) map.removeLayer(window.selectedMarker);
+            
+            window.selectedMarker = L.marker([lat, lon]).addTo(map)
+                .bindPopup(`
+                    <b>${item.name}</b><br>
+                    <button onclick="startNav(${lat}, ${lon})" style="margin-top:8px; background:#007AFF; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">Navigate Here</button>
+                `)
+                .openPopup();
+            
+            document.getElementById('search-results').classList.remove('show');
+            document.getElementById('search-input').value = '';
+        }
+
+        // --- NAVIGATION ---
+        function startNav(lat, lon) {
+            const ua = navigator.userAgent;
+            if (/iPad|iPhone|iPod/.test(ua)) {
+                window.open(`http://maps.apple.com/?daddr=${lat},${lon}`);
+            } else {
+                window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
+            }
+        }
+
+        function findNearby(category) {
+            const center = map.getCenter();
+            const query = `${category} near ${center.lat.toFixed(2)},${center.lng.toFixed(2)}`;
+            document.getElementById('search-input').value = category;
+            fetchSearchResults(query);
+        }
+
+        // --- MAP CONTROLS ---
+        function toggleMapLayer() {
+            const { satellite, osmLabels, standard } = map.layers;
+            
+            if (currentMode === 'hybrid') {
+                // Switch to Standard
+                map.removeLayer(satellite);
+                map.removeLayer(osmLabels);
+                standard.addTo(map);
+                currentMode = 'standard';
+            } else {
+                // Switch to Hybrid
+                map.removeLayer(standard);
+                satellite.addTo(map);
+                osmLabels.addTo(map);
+                currentMode = 'hybrid';
+            }
+        }
+
+        function locateMe() {
+            if (!navigator.geolocation) {
+                alert("GPS not supported");
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    
+                    // Simple boundary check
+                    if (latitude < 23 || latitude > 38 || longitude < 60 || longitude > 78) {
+                        alert("You are outside Pakistan boundaries.");
+                        return;
+                    }
+
+                    if (userMarker) map.removeLayer(userMarker);
+                    
+                    userMarker = L.circleMarker([latitude, longitude], {
+                        radius: 8,
+                        fillColor: '#007AFF',
+                        color: '#fff',
+                        weight: 2,
+                        fillOpacity: 0.8
+                    }).addTo(map).bindPopup("You are here").openPopup();
+                    
+                    map.flyTo([latitude, longitude], 15);
+                },
+                () => alert("Could not get location. Enable GPS."),
+                { enableHighAccuracy: true }
+            );
+        }
+
+        function resetNorth() {
+            map.setRotation(0);
+            map.flyTo(map.getCenter(), map.getZoom());
+        }
+
+        function toggleLang() {
+            const input = document.getElementById('search-input');
+            if (input.placeholder.includes('Search')) {
+                input.placeholder = 'دیہات، دکانیں، شہر تلاش کریں...';
+            } else {
+                input.placeholder = 'Search villages, shops, cities...';
+            }
+        }
+
+        function startVoiceSearch() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Voice search not supported on this browser.");
+                return;
+            }
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'en-PK';
+            recognition.start();
+            recognition.onresult = (e) => {
+                document.getElementById('search-input').value = e.results[0][0].transcript;
+                fetchSearchResults(e.results[0][0].transcript);
+            };
+        }
+
+        // Close search on map click
+        map.on('click', () => {
+            document.getElementById('search-results').classList.remove('show');
+        });
+
+        // Start App
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
