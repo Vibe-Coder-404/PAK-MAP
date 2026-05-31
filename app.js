@@ -1,7 +1,3 @@
---- pak-map-app/app.js (原始)
-
-
-+++ pak-map-app/app.js (修改后)
 // PAK MAP - Pakistan National Map Application
 // Privacy-focused, offline-capable map application for Pakistan
 
@@ -146,6 +142,7 @@ function initMap() {
     });
 
     // Add Esri World Imagery (Satellite) - High quality satellite imagery
+    // FIXED: Removed space in URL below
     const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 18,
         attribution: '© Esri, DigitalGlobe, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community',
@@ -153,6 +150,7 @@ function initMap() {
     });
 
     // Add Esri Hybrid (Satellite + Labels)
+    // FIXED: Removed space in URL below
     const hybridLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 18,
         attribution: '© Esri',
